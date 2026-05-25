@@ -27,6 +27,7 @@ export default function App() {
   // Состояния отображения модальных окон
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showIosPrompt, setShowIosPrompt] = useState(false); // Подсказка для установки на iOS
 
   // Поиск городов и управление доступом к геопозиции
   const [isGeoDenied, setIsGeoDenied] = useState(false); 
@@ -57,6 +58,18 @@ export default function App() {
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  // Проверка: открыто ли приложение в Safari и нужно ли показать инструкцию по установке
+  useEffect(() => {
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    // Проверяем, запущено ли уже приложение в автономном режиме (как PWA)
+    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+
+    // Показываем плашку только для iOS-браузеров, если приложение еще не установлено
+    if (isIos && !isStandalone) {
+      setShowIosPrompt(true);
+    }
   }, []);
 
   // Запрос текущих координат пользователя и определение города
@@ -360,6 +373,28 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Модальное окно: Инструкция по установке PWA для iOS */}
+      {showIosPrompt && (
+        <div className="modal-overlay" onClick={() => setShowIosPrompt(false)}>
+          <div className="modal-glass-container settings-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <img src={infoIcon} alt="" className="modal-header-icon" />
+              <span className="modal-icon-title">Установка приложения</span>
+            </div>
+            <div style={{ padding: '15px 0', lineHeight: '1.5', fontSize: '14px', color: '#e0e0e0' }}>
+              <p style={{ marginBottom: '12px' }}>Установите **cast.ly** на главный экран, чтобы использовать его как полноценное веб-приложение.</p>
+              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                Нажмите на кнопку **«Поделиться»** в меню Safari (квадрат со стрелкой вверх) и выберите **«На экран "Домой"»**.
+              </div>
+            </div>
+            <button className="toggle-btn active" style={{ width: '100%', padding: '12px', marginTop: '10px' }} onClick={() => setShowIosPrompt(false)}>
+              Понятно
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
