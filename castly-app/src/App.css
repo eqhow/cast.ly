@@ -1,0 +1,757 @@
+/* === Базовые настройки и сброс стилей === */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  width: 100%;
+  height: 100lvh; 
+  overflow: hidden;
+  font-family: 'Manrope', sans-serif;
+  background-color: #0d0d0d;
+  color: #ffffff;
+}
+
+#root {
+  width: 100%;
+  height: 100lvh; 
+}
+
+/* Системные иконки общего назначения */
+.header-svg-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.settings-clickable {
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.settings-clickable:hover {
+  opacity: 0.7;
+}
+
+.weather-status-svg {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.panel-svg-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* === Десктопная заглушка === */
+
+.desktop-plug-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  background-color: #f6f4e6;
+  color: #1a1a1a;
+  overflow: hidden;
+}
+
+.desktop-plug-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.plug-icon-img {
+  width: 64px;
+  height: auto;
+  margin-bottom: 12px;
+}
+
+.plug-logo {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 24px;
+  font-weight: 400;
+  text-transform: lowercase;
+  margin-bottom: 64px;
+  letter-spacing: 0.5px;
+}
+
+.plug-text {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #1a1a1a;
+  letter-spacing: -0.2px;
+}
+
+/* === Сплеш-скрин и лоадер === */
+
+.splash-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #f6f4e6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.splash-screen .brand-logo {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 32px;
+  color: #1a1a1a;
+  margin-bottom: 48px;
+}
+
+.loader-dots {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 24px;
+  color: #1a1a1a;
+  animation: pulse 1s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* === Динамический видео-фон === */
+
+.app-container {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  background-image: url('/bg.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+.video-background-container {
+  position: fixed; 
+  top: 0;
+  left: 0;
+  right: 0;  
+  bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.bg-image-fallback,
+.bg-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover; 
+  display: block;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.0) 50%,
+    rgba(0, 0, 0, 0.3) 100% 
+  );
+  z-index: 1;
+}
+
+/* === Структура мобильного UI === */
+
+.ui-content-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%; 
+  padding-top: calc(12px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-left: 20px;
+  padding-right: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.weather-card-top {
+  width: 100%;
+}
+
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.city-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-svg-icon {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  max-width: 20px !important;
+  max-height: 20px !important;
+  aspect-ratio: 1 / 1 !important; 
+  object-fit: contain !important;  
+  flex-shrink: 0 !important;
+  display: block;
+  transition: filter 0.4s ease, transform 0.2s ease; 
+}
+
+.settings-clickable:active,
+.header-svg-icon:active {
+  transform: scale(0.88);
+  opacity: 0.7;
+}
+
+.city-text {
+  font-family: 'Pix Cyrillic', monospace;
+  font-weight: 400; 
+  font-size: 18px;  
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  transition: color 0.4s ease; 
+}
+
+.settings-icon {
+  font-size: 18px;
+  cursor: pointer;
+  opacity: 0.9;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.main-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.temp-large-pix {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 72px;
+  line-height: 1;
+  margin-bottom: 8px;
+  color: #ffffff;
+  transition: color 0.4s ease; 
+}
+
+.condition-pix {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 18px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.4s ease; 
+}
+
+.weather-status-svg {
+  width: 24px !important;
+  height: 24px !important;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  transition: filter 0.4s ease; 
+}
+
+/* === Нижние информационные панели и стекломорфизм === */
+
+.glass-panel {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.18) 100%) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15); 
+  border-radius: 24px;
+  padding: 20px;
+  color: #ffffff; 
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.4s ease;
+}
+
+.panel-title {
+  font-family: 'Pix Cyrillic', monospace;
+  font-weight: 400;
+  font-size: 20px !important; 
+  color: #ffffff !important;
+  opacity: 1 !important;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 0.3px;
+}
+
+.panel-svg-icon {
+  width: 22px !important;
+  height: 22px !important;
+  object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  filter: none !important; 
+}
+
+.panel-icon {
+  margin-right: 6px;
+  font-size: 14px;
+}
+
+.panel-body {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.45;
+  letter-spacing: -0.1px;
+  color: rgba(255, 255, 255, 0.9) !important; 
+}
+
+/* === Сетка подробной сводки погоды === */
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px 12px; 
+  margin-top: 4px;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.grid-label {
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700; 
+  color: #ffffff !important; 
+  margin-bottom: 6px;
+  white-space: nowrap;
+  text-transform: none;
+}
+
+.grid-value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 26px; 
+  font-weight: 500; 
+  color: #ffffff !important;
+  line-height: 1.1;
+  display: flex;
+  align-items: baseline;
+}
+
+.grid-value .unit {
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px; 
+  font-weight: 400; 
+  color: #ffffff !important; 
+  margin-left: 2px;
+}
+
+/* === Стилизация цветовых тем для шапки главного экрана === */
+
+/* Светлые темы оформления (солнечно, облачно) */
+.data-theme-sunny,
+.data-theme-cloudy {
+  color: #000000 !important;
+}
+
+.data-theme-sunny .city-text,
+.data-theme-sunny .temp-large-pix,
+.data-theme-sunny .condition-pix,
+.data-theme-cloudy .city-text,
+.data-theme-cloudy .temp-large-pix,
+.data-theme-cloudy .condition-pix {
+  color: #000000 !important;
+}
+
+.data-theme-sunny .header-svg-icon,
+.data-theme-sunny .weather-status-svg,
+.data-theme-cloudy .header-svg-icon,
+.data-theme-cloudy .weather-status-svg {
+  filter: invert(1) brightness(0) !important;
+}
+
+/* Темные темы оформления (дождь, ночь) */
+.data-theme-rainy, 
+.data-theme-night {
+  color: #ffffff !important;
+}
+
+.data-theme-rainy .city-text,
+.data-theme-rainy .temp-large-pix,
+.data-theme-rainy .condition-pix,
+.data-theme-night .city-text,
+.data-theme-night .temp-large-pix,
+.data-theme-night .condition-pix {
+  color: #ffffff !important;
+}
+
+.data-theme-rainy .header-svg-icon,
+.data-theme-rainy .weather-status-svg,
+.data-theme-night .header-svg-icon,
+.data-theme-night .weather-status-svg {
+  filter: none !important;
+}
+
+/* === Модальные окна === */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0; 
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal-glass-container {
+  width: 100%;
+  max-width: 430px; 
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.6) 0%, rgba(10, 10, 10, 0.45) 100%);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 40px 40px 0 0; 
+  padding: 28px 20px calc(24px + env(safe-area-inset-bottom)) 20px; 
+  box-sizing: border-box;
+  color: #ffffff;
+  box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.4);
+  animation: modalSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalSlideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  margin-bottom: 24px;
+}
+
+.modal-icon-title {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  color: #ffffff;
+}
+
+/* Модальное окно: Выбор локации */
+.geo-alert-box {
+  background: rgba(255, 107, 107, 0.16); 
+  border: 1px solid rgba(255, 107, 107, 0.25);
+  border-radius: 20px;
+  padding: 18px 16px;
+  margin-bottom: 24px;
+}
+
+.geo-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.geo-alert-pin {
+  font-size: 16px;
+}
+
+.geo-alert-header h3 {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 16px;
+  font-weight: 400;
+  color: #ff6b6b; 
+  margin: 0;
+}
+
+.geo-alert-box p {
+  font-family: 'Manrope', sans-serif;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #ff6b6b;
+  letter-spacing: -0.1px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  font-size: 16px;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.modal-search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.12); 
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 14px;
+  padding: 14px 16px 14px 44px;
+  font-family: 'Pix Cyrillic', monospace; 
+  font-size: 15px;
+  color: #ffffff;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.modal-search-input:focus {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.modal-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: 'Pix Cyrillic', monospace;
+  text-transform: lowercase;
+}
+
+.geo-alert-box.denied {
+  background: rgba(231, 76, 60, 0.2);
+  border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.geo-alert-box.denied h3 {
+  color: #e74c3c;
+}
+
+.search-results-container {
+  margin-top: 12px;
+  max-height: 180px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.search-result-item {
+  padding: 12px 16px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.search-status-text {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+/* Модальное окно: Панель настроек */
+.settings-row {
+  margin-bottom: 22px;
+}
+
+.settings-row:last-child {
+  margin-bottom: 8px;
+}
+
+.settings-row label {
+  display: block;
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5); 
+  margin-bottom: 10px;
+  text-transform: lowercase;
+}
+
+.toggle-group {
+  display: flex;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 100px;
+  padding: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.toggle-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 100px;
+  color: #ffffff;
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 14px;
+  padding: 10px 4px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.toggle-btn.active {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-btn:not(.active):active {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Типографика внутри контейнера настроек */
+.settings-panel-container {
+  font-family: 'Manrope', sans-serif !important;
+  font-weight: 400 !important; 
+}
+
+.settings-panel-container label,
+.settings-panel-container .toggle-btn {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 400; 
+}
+
+.settings-panel-container .title-pix {
+  font-family: 'Pix Cyrillic', monospace; 
+}
+
+.settings-panel-container .toggle-btn.active {
+  font-weight: 700 !important; 
+}
+
+/* === Позиционирование элементов и иконок в модальных окнах === */
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-header-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-svg-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.modal-search-input {
+  padding-left: 44px !important;
+}
+
+.geo-alert-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.geo-alert-svg-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+/* Специфические стили, фильтры и геометрия блоков */
+.geo-alert-svg-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: invert(38%) sepia(61%) saturate(5451%) hue-rotate(345deg) brightness(96%) contrast(88%);
+}
+
+.search-input-svg-icon {
+  position: absolute;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  opacity: 0.4; 
+  pointer-events: none;
+}
+
+.main-display {
+  margin-top: 28px; 
+}
+
+.temp-large-pix {
+  font-size: 3.2rem; 
+  line-height: 1;
+}
+
+.bottom-panels-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; 
+}
