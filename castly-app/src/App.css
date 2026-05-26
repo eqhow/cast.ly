@@ -39,9 +39,12 @@ html, body {
 }
 
 .weather-status-svg {
-  width: 24px;
-  height: 24px;
+  width: 32px !important; /* Увеличено для лучшей размеренности */
+  height: 32px !important;
   object-fit: contain;
+  flex-shrink: 0;
+  display: block;
+  transition: filter 0.4s ease; 
 }
 
 .panel-svg-icon {
@@ -132,6 +135,83 @@ html, body {
   50% { opacity: 1; }
 }
 
+/* --- Стилизация сплеш-скрина под светлый макет --- */
+.splash-screen.light-theme {
+  background-color: #fcfade; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.splash-content-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.splash-logo-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 45%;
+  transform: translateY(-50%);
+}
+
+.splash-icon {
+  width: 72px; /* Размер иконки облака из favicon */
+  height: auto;
+  margin-bottom: 12px;
+}
+
+.font-pixel {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 900;
+  color: #000000;
+  font-size: 32px;
+  letter-spacing: -1px;
+}
+
+.splash-bottom-area {
+  position: absolute;
+  bottom: 20%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loader-dots-squares {
+  display: flex;
+  gap: 6px;
+}
+
+.loader-dots-squares .square {
+  width: 8px;
+  height: 8px;
+  background-color: #d3d3d3; 
+  transition: background-color 0.2s ease;
+}
+
+.loader-dots-squares .square.active {
+  background-color: #000000; 
+}
+
+.splash-loading-text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  color: #000000;
+  font-weight: 400;
+}
+
 /* === Динамический видео-фон === */
 
 .app-container {
@@ -198,18 +278,27 @@ html, body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  touch-action: pan-y;
+}
+
+/* Красивые анимации загрузки */
+.app-entry-active .weather-card-top {
+  animation: fadeDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.app-entry-active .bottom-panels-area {
   animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: 0.15s;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideUpFade {
-  from {
-    opacity: 0;
-    transform: translateY(15px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .weather-card-top {
@@ -270,11 +359,12 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  margin-top: 28px;
 }
 
 .temp-large-pix {
   font-family: 'Pix Cyrillic', monospace;
-  font-size: 72px;
+  font-size: 72px; /* 3.2rem */
   line-height: 1;
   margin-bottom: 8px;
   color: #ffffff;
@@ -283,24 +373,21 @@ html, body {
 
 .condition-pix {
   font-family: 'Pix Cyrillic', monospace;
-  font-size: 18px;
+  font-size: 22px; /* Выровнено относительно иконки */
   color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   transition: color 0.4s ease; 
 }
 
-.weather-status-svg {
-  width: 24px !important;
-  height: 24px !important;
-  object-fit: contain;
-  flex-shrink: 0;
-  display: block;
-  transition: filter 0.4s ease; 
-}
-
 /* === Нижние информационные панели и стекломорфизм === */
+
+.bottom-panels-area {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; 
+}
 
 .glass-panel {
   background: linear-gradient(135deg, rgba(0, 0, 0, 0.28) 0%, rgba(0, 0, 0, 0.18) 100%) !important;
@@ -333,11 +420,6 @@ html, body {
   flex-shrink: 0;
   display: block;
   filter: none !important; 
-}
-
-.panel-icon {
-  margin-right: 6px;
-  font-size: 14px;
 }
 
 .panel-body {
@@ -392,36 +474,47 @@ html, body {
   margin-left: 2px;
 }
 
-/* === Стилизация цветовых тем для шапки главного экрана === */
+/* === Индикаторы страниц на главном экране при свайпах (внизу, квадраты) === */
 
-/* Светлые темы оформления (солнечно, облачно) */
+.city-page-indicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  margin-top: -4px;
+}
+
+.page-square {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px; /* Квадраты с легким скруглением */
+  background-color: currentColor; /* Наследует цвет от темы */
+  opacity: 0.3;
+  transition: all 0.3s ease;
+}
+
+.page-square.active {
+  opacity: 0.9;
+  transform: scale(1.2);
+}
+
+/* === Стилизация цветовых тем для шапки === */
+
+/* Светлые темы оформления: дождь, ночь, ясно (днем/солнечно), закат -> БЕЛЫЕ ИКОНКИ И ТЕКСТ */
 .data-theme-sunny,
-.data-theme-cloudy {
-  color: #000000 !important;
+.data-theme-sunset,
+.data-theme-rainy,
+.data-theme-night {
+  color: #ffffff !important;
 }
 
 .data-theme-sunny .city-text,
 .data-theme-sunny .temp-large-pix,
 .data-theme-sunny .condition-pix,
-.data-theme-cloudy .city-text,
-.data-theme-cloudy .temp-large-pix,
-.data-theme-cloudy .condition-pix {
-  color: #000000 !important;
-}
-
-.data-theme-sunny .header-svg-icon,
-.data-theme-sunny .weather-status-svg,
-.data-theme-cloudy .header-svg-icon,
-.data-theme-cloudy .weather-status-svg {
-  filter: invert(1) brightness(0) !important;
-}
-
-/* Темные темы оформления (дождь, ночь) */
-.data-theme-rainy, 
-.data-theme-night {
-  color: #ffffff !important;
-}
-
+.data-theme-sunset .city-text,
+.data-theme-sunset .temp-large-pix,
+.data-theme-sunset .condition-pix,
 .data-theme-rainy .city-text,
 .data-theme-rainy .temp-large-pix,
 .data-theme-rainy .condition-pix,
@@ -431,11 +524,31 @@ html, body {
   color: #ffffff !important;
 }
 
+.data-theme-sunny .header-svg-icon,
+.data-theme-sunny .weather-status-svg,
+.data-theme-sunset .header-svg-icon,
+.data-theme-sunset .weather-status-svg,
 .data-theme-rainy .header-svg-icon,
 .data-theme-rainy .weather-status-svg,
 .data-theme-night .header-svg-icon,
 .data-theme-night .weather-status-svg {
-  filter: none !important;
+  filter: brightness(0) invert(1) !important;
+}
+
+/* Темные темы оформления: облачно -> ЧЕРНЫЕ ИКОНКИ И ТЕКСТ */
+.data-theme-cloudy {
+  color: #000000 !important;
+}
+
+.data-theme-cloudy .city-text,
+.data-theme-cloudy .temp-large-pix,
+.data-theme-cloudy .condition-pix {
+  color: #000000 !important;
+}
+
+.data-theme-cloudy .header-svg-icon,
+.data-theme-cloudy .weather-status-svg {
+  filter: brightness(0) !important;
 }
 
 /* === Модальные окна === */
@@ -478,7 +591,16 @@ html, body {
 }
 
 .modal-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 24px;
+}
+
+.modal-header-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
 .modal-icon-title {
@@ -505,8 +627,11 @@ html, body {
   margin-bottom: 8px;
 }
 
-.geo-alert-pin {
-  font-size: 16px;
+.geo-alert-svg-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: invert(38%) sepia(61%) saturate(5451%) hue-rotate(345deg) brightness(96%) contrast(88%);
 }
 
 .geo-alert-header h3 {
@@ -533,11 +658,13 @@ html, body {
   width: 100%;
 }
 
-.search-icon {
+.search-input-svg-icon {
   position: absolute;
-  left: 16px;
-  font-size: 16px;
-  opacity: 0.6;
+  left: 14px;
+  width: 18px;
+  height: 18px;
+  filter: brightness(0) invert(1);
+  opacity: 0.4; 
   pointer-events: none;
 }
 
@@ -547,7 +674,7 @@ html, body {
   border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 14px;
   padding: 14px 16px 14px 44px;
-  font-family: 'Pix Cyrillic', monospace; 
+  font-family: 'Manrope', sans-serif !important; 
   font-size: 15px;
   color: #ffffff;
   outline: none;
@@ -560,8 +687,8 @@ html, body {
 
 .modal-search-input::placeholder {
   color: rgba(255, 255, 255, 0.4);
-  font-family: 'Pix Cyrillic', monospace;
-  text-transform: lowercase;
+  font-family: 'Manrope', sans-serif !important;
+  text-transform: none;
 }
 
 .geo-alert-box.denied {
@@ -573,6 +700,7 @@ html, body {
   color: #e74c3c;
 }
 
+/* Поиск */
 .search-results-container {
   margin-top: 12px;
   max-height: 180px;
@@ -605,6 +733,74 @@ html, body {
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
   text-align: center;
+}
+
+/* Менеджер сохраненных городов */
+.saved-cities-manager {
+  margin-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  padding-top: 16px;
+}
+
+.saved-cities-title {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 12px;
+  font-weight: 400;
+}
+
+.saved-city-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.saved-city-row.active-city-row {
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255,255,255,0.08);
+}
+
+.saved-city-row span {
+  flex-grow: 1;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.city-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.city-actions button {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.city-actions button:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.city-actions button.delete-btn {
+  color: #ff6b6b;
+  background: rgba(255,107,107,0.1);
 }
 
 /* Модальное окно: Панель настроек */
@@ -658,7 +854,6 @@ html, body {
   background: rgba(255, 255, 255, 0.05);
 }
 
-/* Типографика внутри контейнера настроек */
 .settings-panel-container {
   font-family: 'Manrope', sans-serif !important;
   font-weight: 400 !important; 
@@ -678,199 +873,14 @@ html, body {
   font-weight: 700 !important; 
 }
 
-/* === Позиционирование элементов и иконок в модальных окнах === */
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.modal-header-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
-
-.search-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.search-input-svg-icon {
-  position: absolute;
-  left: 14px;
-  width: 18px;
-  height: 18px;
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-.modal-search-input {
-  padding-left: 44px !important;
-}
-
-.geo-alert-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.geo-alert-svg-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-/* Специфические стили, фильтры и геометрия блоков */
-.geo-alert-svg-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  filter: invert(38%) sepia(61%) saturate(5451%) hue-rotate(345deg) brightness(96%) contrast(88%);
-}
-
-.search-input-svg-icon {
-  position: absolute;
-  left: 14px;
-  width: 18px;
-  height: 18px;
-  filter: brightness(0) invert(1);
-  opacity: 0.4; 
-  pointer-events: none;
-}
-
-.main-display {
-  margin-top: 28px; 
-}
-
-.temp-large-pix {
-  font-size: 3.2rem; 
-  line-height: 1;
-}
-
-.bottom-panels-area {
-  display: flex;
-  flex-direction: column;
-  gap: 20px; 
-}
-
-/* --- Стилизация сплеш-скрина под светлый макет (по дизайну) --- */
-.splash-screen.light-theme {
-  background-color: #fcfade; /* Светло-желтый фон из макета */
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-}
-
-.splash-content-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  width: 100%;
-  position: relative;
-}
-
-.splash-logo-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: absolute;
-  top: 45%;
-  transform: translateY(-50%);
-}
-
-.pixel-cloud-svg {
-  margin-bottom: 5px;
-}
-
-.font-pixel {
-  font-family: 'Courier New', Courier, monospace;
-  font-weight: 900;
-  color: #000000;
-  font-size: 32px;
-  letter-spacing: -1px;
-}
-
-.splash-bottom-area {
-  position: absolute;
-  bottom: 20%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-
-.loader-dots-squares {
-  display: flex;
-  gap: 6px;
-}
-
-.loader-dots-squares .square {
-  width: 8px;
-  height: 8px;
-  background-color: #d3d3d3; /* Неактивный серый */
-  transition: background-color 0.2s ease;
-}
-
-.loader-dots-squares .square.active {
-  background-color: #000000; /* Активный черный */
-}
-
-.splash-loading-text {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 14px;
-  color: #000000;
-  font-weight: 400;
-}
-
-/* --- Индикаторы страниц на главном экране при свайпах --- */
-.city-page-indicator {
-  position: absolute;
-  top: env(safe-area-inset-top, 25px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-  z-index: 100;
-}
-
-.page-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transition: all 0.3s ease;
-}
-
-.page-dot.active {
-  background: #ffffff;
-  transform: scale(1.3);
-  box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
-}
-
-/* Фикс контейнера интерфейса для бесконфликтных свайпов */
-.ui-content-wrapper {
-  touch-action: pan-y; /* Позволяет скроллить по вертикали, но браузер отдает горизонтальные свайпы нам */
-  width: 100%;
-}
-
 /* === PWA Gate (Экран установки) === */
 .pwa-gate-container {
   position: fixed;
   inset: 0;
-  background-color: #fcfade; /* Светло-желтый фон из сплеш-скрина */
-  z-index: 99999; /* Поверх всех остальных элементов */
+  background-color: #fcfade; 
+  z-index: 99999; 
   display: flex;
   flex-direction: column;
-  /* Отступ сверху учитывает safe-area (челку/динамический остров) */
   padding: calc(80px + env(safe-area-inset-top)) 24px 24px 28px;
   color: #000000;
   overflow-y: auto;

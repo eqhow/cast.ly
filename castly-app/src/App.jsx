@@ -26,13 +26,24 @@ export default function App() {
   const [isFadingOut, setIsFadingOut] = useState(false);   
   const [loading, setLoading] = useState(true);           
   const [splashText, setSplashText] = useState('изучаю местность');
-  const [loadingStep, setLoadingStep] = useState(0); // Для анимации квадратного лоадера
+  const [loadingStep, setLoadingStep] = useState(0); 
 
-  // Массив сохраненных городов для свайпов
-  const [savedCities, setSavedCities] = useState([
-    { name: 'Санкт-Петербург', coords: { lat: 59.9386, lon: 30.3141 } }
-  ]);
+  // Загружаем сохраненные города из localStorage (или дефолтный)
+  const [savedCities, setSavedCities] = useState(() => {
+    const saved = localStorage.getItem('castly_cities');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.length > 0) return parsed;
+    }
+    return [{ name: 'Санкт-Петербург', coords: { lat: 59.9386, lon: 30.3141 }, isDefault: true }];
+  });
+  
   const [activeCityIndex, setActiveCityIndex] = useState(0);
+
+  // Сохранение городов при любом их изменении
+  useEffect(() => {
+    localStorage.setItem('castly_cities', JSON.stringify(savedCities));
+  }, [savedCities]);
 
   // Текущий активный город
   const cityName = savedCities[activeCityIndex]?.name || 'Загрузка...';
@@ -122,11 +133,12 @@ export default function App() {
             const address = geoData.address;
             const city = address.city || address.town || address.village || address.state || "Неизвестный город";
             
-            // Заменяем базовый город на геолокацию пользователя
+            // Если город дефолтный (пользователь еще ничего не добавлял), заменяем его геолокацией
             setSavedCities(prev => {
-              const updated = [...prev];
-              updated[0] = { name: city, coords: { lat: latitude, lon: longitude } };
-              return updated;
+              if (prev.length === 1 && prev[0].isDefault) {
+                return [{ name: city, coords: { lat: latitude, lon: longitude } }];
+              }
+              return prev;
             });
           })
           .catch(err => console.error("Ошибка названия города:", err));
@@ -141,7 +153,10 @@ export default function App() {
 
   useEffect(() => {
     if (isPwaBlocked) return;
-    requestGeoLocation();
+    // Запрашиваем геолокацию при первом запуске, если город стоит дефолтный
+    if (savedCities.length === 1 && savedCities[0].isDefault) {
+      requestGeoLocation();
+    }
   }, [isPwaBlocked]);
 
   // Загрузка погоды
@@ -218,7 +233,7 @@ export default function App() {
       });
   };
 
-  // Сохранение и переключение на новый город
+  // Добавление нового города
   const handleSelectCity = (cityData) => {
     const lat = parseFloat(cityData.lat);
     const lon = parseFloat(cityData.lon);
@@ -226,13 +241,14 @@ export default function App() {
     const newCity = { name: shortName, coords: { lat, lon } };
 
     setSavedCities(prev => {
-      // Ищем, нет ли уже этого города в пуле
+      // Ищем дубликаты
       const existingIdx = prev.findIndex(c => Math.abs(c.coords.lat - lat) < 0.02 && Math.abs(c.coords.lon - lon) < 0.02);
       if (existingIdx !== -1) {
         setActiveCityIndex(existingIdx);
         return prev;
       }
-      const updated = [...prev, newCity];
+      // Убираем флаг дефолтности, если он был, так как пользователь сам добавил город
+      const updated = prev[0]?.isDefault ? [newCity] : [...prev, newCity];
       setActiveCityIndex(updated.length - 1);
       return updated;
     });
@@ -242,33 +258,53 @@ export default function App() {
     setSearchResults([]);
   };
 
+  // Управление городами (перемещение, удаление)
+  const moveCityUp = (index) => {
+    if (index === 0) return;
+    setSavedCities(prev => {
+      const arr = [...prev];
+      [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+      return arr;
+    });
+    if (activeCityIndex === index) setActiveCityIndex(index - 1);
+    else if (activeCityIndex === index - 1) setActiveCityIndex(index);
+  };
+
+  const moveCityDown = (index) => {
+    if (index === savedCities.length - 1) return;
+    setSavedCities(prev => {
+      const arr = [...prev];
+      [arr[index + 1], arr[index]] = [arr[index], arr[index + 1]];
+      return arr;
+    });
+    if (activeCityIndex === index) setActiveCityIndex(index + 1);
+    else if (activeCityIndex === index + 1) setActiveCityIndex(index);
+  };
+
+  const deleteCity = (index) => {
+    if (savedCities.length === 1) {
+      alert("Нельзя удалить единственный город!");
+      return;
+    }
+    setSavedCities(prev => prev.filter((_, i) => i !== index));
+    if (activeCityIndex >= index && activeCityIndex > 0) {
+      setActiveCityIndex(prev => prev - 1);
+    }
+  };
+
   // Обработчики свайпов влево/вправо
-  const handleTouchStart = (e) => {
-    setTouchStartX(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEndX(e.targetTouches[0].clientX);
-  };
-
+  const handleTouchStart = (e) => setTouchStartX(e.targetTouches[0].clientX);
+  const handleTouchMove = (e) => setTouchEndX(e.targetTouches[0].clientX);
   const handleTouchEnd = () => {
     if (!touchStartX || !touchEndX) return;
     const swipeDistance = touchStartX - touchEndX;
     const minSwipeThreshold = 50; 
 
-    if (swipeDistance > minSwipeThreshold) {
-      // Свайп влево -> следующий город
-      if (activeCityIndex < savedCities.length - 1) {
-        setActiveCityIndex(prev => prev + 1);
-      }
-    } else if (swipeDistance < -minSwipeThreshold) {
-      // Свайп вправо -> предыдущий город
-      if (activeCityIndex > 0) {
-        setActiveCityIndex(prev => prev - 1);
-      }
+    if (swipeDistance > minSwipeThreshold && activeCityIndex < savedCities.length - 1) {
+      setActiveCityIndex(prev => prev + 1);
+    } else if (swipeDistance < -minSwipeThreshold && activeCityIndex > 0) {
+      setActiveCityIndex(prev => prev - 1);
     }
-    
-    // Сбрасываем координаты
     setTouchStartX(null);
     setTouchEndX(null);
   };
@@ -311,15 +347,10 @@ export default function App() {
         {showSplash && (
           <div className={`splash-screen light-theme ${isFadingOut ? 'fade-out' : ''}`}>
             <div className="splash-content-box">
-              
               <div className="splash-logo-area">
-                {/* SVG Пиксельное облако */}
-                <svg width="60" height="36" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="pixel-cloud-svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M24 6H36V12H42V18H48V30H6V24H12V18H18V12H24V6ZM36 12V18H42V24H12V18H18V12H24V12H36Z" fill="black"/>
-                </svg>
+                <img src="/favicon.svg" alt="castly" className="splash-icon" />
                 <div className="brand-logo font-pixel">castly</div>
               </div>
-              
               <div className="splash-bottom-area">
                 <div className="loader-dots-squares">
                   <div className={`square ${loadingStep >= 1 ? 'active' : ''}`}></div>
@@ -330,7 +361,6 @@ export default function App() {
                 </div>
                 <div className="splash-loading-text">{splashText}</div>
               </div>
-
             </div>
           </div>
         )}
@@ -341,15 +371,6 @@ export default function App() {
           </video> 
           <div className="video-overlay"></div>
         </div>
-
-        {/* Индикатор сохраненных страниц городов (точки сверху) */}
-        {savedCities.length > 1 && (
-          <div className="city-page-indicator">
-            {savedCities.map((_, idx) => (
-              <div key={idx} className={`page-dot ${idx === activeCityIndex ? 'active' : ''}`} />
-            ))}
-          </div>
-        )}
 
         <div 
           className={`ui-content-wrapper ${!showSplash ? 'app-entry-active' : ''}`}
@@ -409,6 +430,15 @@ export default function App() {
                 </div>
               </div>
             </div>
+
+            {/* Индикаторы свайпов перенесены вниз */}
+            {savedCities.length > 1 && (
+              <div className={`city-page-indicator data-theme-${weatherType}`}>
+                {savedCities.map((_, idx) => (
+                  <div key={idx} className={`page-square ${idx === activeCityIndex ? 'active' : ''}`} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -418,7 +448,7 @@ export default function App() {
             <div className="modal-glass-container location-panel" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <img src={trainIcon} alt="" className="modal-header-icon" />
-                <span className="modal-icon-title">Добавить геолокацию</span>
+                <span className="modal-icon-title">Локации</span>
               </div>
               
               {isGeoDenied && (
@@ -452,6 +482,25 @@ export default function App() {
                 </div>
               )}
               {isSearching && <div className="search-status-text">Ищем подходящие города...</div>}
+
+              {/* Менеджер сохраненных локаций (показывается, когда нет поиска) */}
+              {searchResults.length === 0 && savedCities.length > 0 && (
+                <div className="saved-cities-manager">
+                  <h4 className="saved-cities-title">Сохраненные локации</h4>
+                  {savedCities.map((city, idx) => (
+                    <div key={idx} className={`saved-city-row ${idx === activeCityIndex ? 'active-city-row' : ''}`}>
+                      <span onClick={() => { setActiveCityIndex(idx); setIsLocationOpen(false); }}>
+                        {city.name} {idx === activeCityIndex && '(Текущая)'}
+                      </span>
+                      <div className="city-actions">
+                        <button onClick={(e) => { e.stopPropagation(); moveCityUp(idx); }}>↑</button>
+                        <button onClick={(e) => { e.stopPropagation(); moveCityDown(idx); }}>↓</button>
+                        <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteCity(idx); }}>✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
