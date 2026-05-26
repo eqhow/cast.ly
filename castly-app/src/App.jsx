@@ -143,17 +143,19 @@ export default function App() {
         // Определение вечернего времени для активации заката (с 18:00 до 21:00)
         const isSunsetHour = currentHour >= 18 && currentHour <= 20;
 
-        if (!isDay) setWeatherType('night');
-        else {
-          if (code === 0) {
-            setWeatherType(isSunsetHour ? 'sunset' : 'sunny');
-          } else if (code >= 1 && code <= 3) {
-            setWeatherType(isSunsetHour && code === 1 ? 'sunset' : 'cloudy');
-          } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
-            setWeatherType('rainy');
+        // Разделение логики на "ясно днем", "ясно ночью" и другие погодные условия
+        if (code === 0) {
+          if (!isDay) {
+            setWeatherType('night'); // Ясно ночью -> bg-night.mp4
           } else {
-            setWeatherType('cloudy');
+            setWeatherType(isSunsetHour ? 'sunset' : 'sunny'); // Ясно днем -> bg-sunny.mp4 (или закат)
           }
+        } else if (code >= 1 && code <= 3) {
+          setWeatherType(isDay && isSunsetHour && code === 1 ? 'sunset' : 'cloudy');
+        } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+          setWeatherType('rainy');
+        } else {
+          setWeatherType('cloudy');
         }
         
         const advice = getClothAdvice(current);
