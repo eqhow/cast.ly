@@ -25,6 +25,7 @@ export default function App() {
   const [showSplash, setShowSplash] = useState(true);     
   const [isFadingOut, setIsFadingOut] = useState(false);   
   const [loading, setLoading] = useState(true);           
+  const [splashText, setSplashText] = useState('изучаю местность');
 
   const [cityName, setCityName] = useState('Загрузка...');
   const [cityCoords, setCityCoords] = useState({ lat: 59.9386, lon: 30.3141 });
@@ -33,7 +34,6 @@ export default function App() {
   // Состояния отображения модальных окон
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showIosPrompt, setShowIosPrompt] = useState(false);
 
   // Поиск городов и управление доступом к геопозиции
   const [isGeoDenied, setIsGeoDenied] = useState(false); 
@@ -55,6 +55,18 @@ export default function App() {
     night: '/videos/bg-night.mp4'
   };
 
+  // Ротация текстов на сплеш-скрине во время загрузки
+  useEffect(() => {
+    if (!showSplash) return;
+    const phrases = ['изучаю местность', 'проверяю погоду', 'обновляю данные'];
+    let index = 0;
+    const interval = setInterval(() => {
+      index = (index + 1) % phrases.length;
+      setSplashText(phrases[index]);
+    }, 1500);
+    return () => clearInterval(interval);
+  }, [showSplash]);
+
   // Определение типа устройства (мобильный экран или тач-интерфейс)
   useEffect(() => {
     if (isPwaBlocked) return;
@@ -67,18 +79,6 @@ export default function App() {
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
-  }, [isPwaBlocked]);
-
-  // Проверка: открыто ли приложение в Safari и нужно ли показать инструкцию по установке в iOS
-  useEffect(() => {
-    if (isPwaBlocked) return;
-
-    const isIosDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandaloneMode = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-
-    if (isIosDevice && !isStandaloneMode) {
-      setShowIosPrompt(true);
-    }
   }, [isPwaBlocked]);
 
   // Запрос текущих координат пользователя и определение города
@@ -252,8 +252,11 @@ export default function App() {
         
         {showSplash && (
           <div className={`splash-screen ${isFadingOut ? 'fade-out' : ''}`}>
-            <div className="brand-logo">cast.ly</div>
-            <div className="loader-dots">....</div>
+            <div className="brand-logo animate-pop">cast.ly</div>
+            <div className="loader-dots">
+              <span>.</span><span>.</span><span>.</span><span>.</span>
+            </div>
+            <div className="splash-loading-text">{splashText}</div>
           </div>
         )}
 
@@ -264,7 +267,7 @@ export default function App() {
           <div className="video-overlay"></div>
         </div>
 
-        <div className="ui-content-wrapper">
+        <div className={`ui-content-wrapper ${!showSplash ? 'app-entry-active' : ''}`}>
           <WeatherCard 
             data={weatherInfo} 
             type={weatherType} 
@@ -397,27 +400,6 @@ export default function App() {
                   <button className={`toggle-btn ${unitPress === 'mmhg' ? 'active' : ''}`} onClick={() => setUnitPress('mmhg')}>мм рт. ст.</button>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Модальное окно: Инструкция по установке PWA для iOS */}
-        {showIosPrompt && (
-          <div className="modal-overlay" onClick={() => setShowIosPrompt(false)}>
-            <div className="modal-glass-container settings-panel" onClick={(e) => e.stopPropagation()}>
-              <div className="modal-header">
-                <img src={infoIcon} alt="" className="modal-header-icon" />
-                <span className="modal-icon-title">Установка приложения</span>
-              </div>
-              <div style={{ padding: '15px 0', lineHeight: '1.5', fontSize: '14px', color: '#e0e0e0' }}>
-                <p style={{ marginBottom: '12px' }}>Установите **cast.ly** на главный экран, чтобы использовать его как полноценное веб-приложение.</p>
-                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  Нажмите на кнопку **«Поделиться»** в меню Safari (квадрат со стрелкой вверх) и выберите **«На экран "Домой"»**.
-                </div>
-              </div>
-              <button className="toggle-btn active" style={{ width: '100%', padding: '12px', marginTop: '10px' }} onClick={() => setShowIosPrompt(false)}>
-                Понятно
-              </button>
             </div>
           </div>
         )}
