@@ -27,7 +27,7 @@ export default function App() {
   // Состояния отображения модальных окон
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showIosPrompt, setShowIosPrompt] = useState(false); // Подсказка для установки на iOS
+  const [showIosPrompt, setShowIosPrompt] = useState(false);
 
   // Поиск городов и управление доступом к геопозиции
   const [isGeoDenied, setIsGeoDenied] = useState(false); 
@@ -43,6 +43,7 @@ export default function App() {
   // Соответствие типов погоды и фоновых видеофайлов
   const videoSources = {
     sunny: '/videos/bg-sunny.mp4',
+    sunset: '/videos/bg-sunset.mp4',
     cloudy: '/videos/bg-cloudy.mp4',
     rainy: '/videos/bg-rainy.mp4',
     night: '/videos/bg-night.mp4'
@@ -60,13 +61,11 @@ export default function App() {
     return () => window.removeEventListener('resize', checkDevice);
   }, []);
 
-  // Проверка: открыто ли приложение в Safari и нужно ли показать инструкцию по установке
+  // Проверка: открыто ли приложение в Safari и нужно ли показать инструкцию по установке в iOS
   useEffect(() => {
     const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    // Проверяем, запущено ли уже приложение в автономном режиме (как PWA)
     const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
 
-    // Показываем плашку только для iOS-браузеров, если приложение еще не установлено
     if (isIos && !isStandalone) {
       setShowIosPrompt(true);
     }
@@ -126,12 +125,22 @@ export default function App() {
 
         const code = current.weather_code;
         const isDay = current.is_day;
+        const currentHour = new Date().getHours();
+        
+        // Определение вечернего времени для активации заката (с 18:00 до 21:00)
+        const isSunsetHour = currentHour >= 18 && currentHour <= 20;
+
         if (!isDay) setWeatherType('night');
         else {
-          if (code === 0) setWeatherType('sunny');
-          else if (code >= 1 && code <= 3) setWeatherType('cloudy');
-          else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) setWeatherType('rainy');
-          else setWeatherType('cloudy');
+          if (code === 0) {
+            setWeatherType(isSunsetHour ? 'sunset' : 'sunny');
+          } else if (code >= 1 && code <= 3) {
+            setWeatherType(isSunsetHour && code === 1 ? 'sunset' : 'cloudy');
+          } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
+            setWeatherType('rainy');
+          } else {
+            setWeatherType('cloudy');
+          }
         }
         
         const advice = getClothAdvice(current);

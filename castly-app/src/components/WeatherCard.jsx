@@ -2,6 +2,7 @@ import React from 'react';
 import locationIcon from '../assets/location.svg';
 import settingsIcon from '../assets/settings.svg'; 
 import sunnyIcon from '../assets/sunny.svg';
+import sunsetIcon from '../assets/sunny.svg'; 
 import cloudyIcon from '../assets/cloudy.svg';
 import rainyIcon from '../assets/rainy.svg';
 import nightIcon from '../assets/night.svg';
@@ -22,6 +23,8 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
     switch (type) {
       case 'sunny':
         return { icon: sunnyIcon, text: 'Ясно' };
+      case 'sunset':
+        return { icon: sunsetIcon, text: 'Закат' }; 
       case 'rainy':
         return { icon: rainyIcon, text: 'Дождь' };
       case 'night':
