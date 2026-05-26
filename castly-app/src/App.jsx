@@ -3,7 +3,7 @@ import './App.css';
 import WeatherCard from './components/WeatherCard';
 import ClothAdvice from './components/ClothAdvice';
 import DesktopPlug from './components/DesktopPlug';
-import PwaGate from './components/PwaGate'; // Импортируем блокировщик PWA
+import PwaGate from './components/PwaGate'; 
 import infoIcon from './assets/info.svg';
 import trainIcon from './assets/train.svg';
 import searchIcon from './assets/search.svg';
