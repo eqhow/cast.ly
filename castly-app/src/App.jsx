@@ -12,7 +12,7 @@ import menuIcon from './assets/menu.svg';
 import { getClothAdvice } from './utils/getClothAdvice';
 
 export default function App() {
-  // Синхронное определение блокировки PWA для предотвращения лишних запросов
+  // Синхронное определение блокировки PWA
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
   const isPwaBlocked = isIos && !isStandalone;
@@ -21,39 +21,44 @@ export default function App() {
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [weatherType, setWeatherType] = useState('sunny');
   
-  // Состояния для управления сплеш-скрином и анимацией ухода
+  // Управление сплеш-скрином
   const [showSplash, setShowSplash] = useState(true);     
   const [isFadingOut, setIsFadingOut] = useState(false);   
   const [loading, setLoading] = useState(true);           
   const [splashText, setSplashText] = useState('изучаю местность');
+  const [loadingStep, setLoadingStep] = useState(0); // Для анимации квадратного лоадера
 
-  // Хранение массива городов (первый элемент — текущая геопозиция)
-  const [cities, setCities] = useState(() => {
-    const saved = localStorage.getItem('castly_cities');
-    return saved ? JSON.parse(saved) : [{ name: 'Загрузка...', lat: 59.9386, lon: 30.3141 }];
-  });
+  // Массив сохраненных городов для свайпов
+  const [savedCities, setSavedCities] = useState([
+    { name: 'Санкт-Петербург', coords: { lat: 59.9386, lon: 30.3141 } }
+  ]);
   const [activeCityIndex, setActiveCityIndex] = useState(0);
 
-  // Состояния отображения модальных окон
+  // Текущий активный город
+  const cityName = savedCities[activeCityIndex]?.name || 'Загрузка...';
+  const cityCoords = savedCities[activeCityIndex]?.coords || { lat: 59.9386, lon: 30.3141 };
+
+  const [aiAdvice, setAiAdvice] = useState('');
+
+  // Модальные окна
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-  // Поиск городов и управление доступом к геопозиции
+  // Поиск и геопозиция
   const [isGeoDenied, setIsGeoDenied] = useState(false); 
   const [searchQuery, setSearchQuery] = useState('');     
   const [searchResults, setSearchResults] = useState([]); 
   const [isSearching, setIsSearching] = useState(false);   
 
-  // Переменные для обработки свайпов
-  const [touchStartX, setTouchStartX] = useState(null);
-  const [touchEndX, setTouchEndX] = useState(null);
-
-  // Пользовательские настройки единиц измерения
+  // Настройки
   const [unitTemp, setUnitTemp] = useState('celsius'); 
   const [unitWind, setUnitWind] = useState('ms');      
   const [unitPress, setUnitPress] = useState('gpa');    
 
-  // Соответствие типов погоды и фоновых видеофайлов
+  // Переменные для отслеживания свайпов
+  const [touchStartX, setTouchStartX] = useState(null);
+  const [touchEndX, setTouchEndX] = useState(null);
+
   const videoSources = {
     sunny: '/videos/bg-sunny.mp4',
     sunset: '/videos/bg-sunset.mp4',
@@ -62,27 +67,30 @@ export default function App() {
     night: '/videos/bg-night.mp4'
   };
 
-  // Сохранение списка городов в localStorage при изменении
-  useEffect(() => {
-    localStorage.setItem('castly_cities', JSON.stringify(cities));
-  }, [cities]);
-
-  // Ротация текстов на сплеш-скрине во время загрузки
+  // Ротация текста и кубиков на сплеш-скрине
   useEffect(() => {
     if (!showSplash) return;
     const phrases = ['изучаю местность', 'проверяю погоду', 'обновляю данные'];
-    let index = 0;
-    const interval = setInterval(() => {
-      index = (index + 1) % phrases.length;
-      setSplashText(phrases[index]);
+    let textIndex = 0;
+    
+    const textInterval = setInterval(() => {
+      textIndex = (textIndex + 1) % phrases.length;
+      setSplashText(phrases[textIndex]);
     }, 1500);
-    return () => clearInterval(interval);
+
+    const stepInterval = setInterval(() => {
+      setLoadingStep((prev) => (prev + 1) % 6);
+    }, 400);
+
+    return () => {
+      clearInterval(textInterval);
+      clearInterval(stepInterval);
+    };
   }, [showSplash]);
 
-  // Определение типа устройства (мобильный экран или тач-интерфейс)
+  // Определение мобилки
   useEffect(() => {
     if (isPwaBlocked) return;
-
     const checkDevice = () => {
       const mobileWidth = window.innerWidth <= 768;
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -93,14 +101,9 @@ export default function App() {
     return () => window.removeEventListener('resize', checkDevice);
   }, [isPwaBlocked]);
 
-  // Запрос текущих координат пользователя и определение города
+  // Геопозиция при старте
   const requestGeoLocation = () => {
     if (!navigator.geolocation) {
-      setCities(prev => {
-        const updated = [...prev];
-        updated[0] = { ...updated[0], name: "Санкт-Петербург" };
-        return updated;
-      });
       setIsGeoDenied(true);
       return;
     }
@@ -118,31 +121,19 @@ export default function App() {
           .then(geoData => {
             const address = geoData.address;
             const city = address.city || address.town || address.village || address.state || "Неизвестный город";
-            setCities(prev => {
+            
+            // Заменяем базовый город на геолокацию пользователя
+            setSavedCities(prev => {
               const updated = [...prev];
-              updated[0] = { name: city, lat: latitude, lon: longitude };
+              updated[0] = { name: city, coords: { lat: latitude, lon: longitude } };
               return updated;
             });
           })
-          .catch(err => {
-            console.error("Ошибка определения названия города:", err);
-            setCities(prev => {
-              const updated = [...prev];
-              updated[0] = { name: "Санкт-Петербург", lat: 59.9386, lon: 30.3141 };
-              return updated;
-            });
-          });
+          .catch(err => console.error("Ошибка названия города:", err));
       },
       (error) => {
         console.warn("Геопозиция недоступна.");
         setIsGeoDenied(true); 
-        setCities(prev => {
-          const updated = [...prev];
-          if (updated[0].name === 'Загрузка...') {
-            updated[0] = { name: "Санкт-Петербург", lat: 59.9386, lon: 30.3141 };
-          }
-          return updated;
-        });
       },
       { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
     );
@@ -153,14 +144,12 @@ export default function App() {
     requestGeoLocation();
   }, [isPwaBlocked]);
 
-  // Загрузка метеоданных из Open-Meteo API при изменении активного города
+  // Загрузка погоды
   useEffect(() => {
     if (isPwaBlocked) return;
-
-    const activeCity = cities[activeCityIndex];
-    if (!activeCity) return;
-
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${activeCity.lat}&longitude=${activeCity.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,surface_pressure,precipitation,visibility`;
+    
+    setLoading(true);
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${cityCoords.lat}&longitude=${cityCoords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,surface_pressure,precipitation,visibility`;
 
     fetch(url)
       .then((res) => res.json())
@@ -171,17 +160,11 @@ export default function App() {
         const code = current.weather_code;
         const isDay = current.is_day;
         const currentHour = new Date().getHours();
-        
-        // Определение вечернего времени для активации заката (с 18:00 до 21:00)
         const isSunsetHour = currentHour >= 18 && currentHour <= 20;
 
-        // Разделение логики на "ясно днем", "ясно ночью" и другие погодные условия
         if (code === 0) {
-          if (!isDay) {
-            setWeatherType('night'); // Ясно ночью -> bg-night.mp4
-          } else {
-            setWeatherType(isSunsetHour ? 'sunset' : 'sunny'); // Ясно днем -> bg-sunny.mp4 (или закат)
-          }
+          if (!isDay) setWeatherType('night');
+          else setWeatherType(isSunsetHour ? 'sunset' : 'sunny');
         } else if (code >= 1 && code <= 3) {
           setWeatherType(isDay && isSunsetHour && code === 1 ? 'sunset' : 'cloudy');
         } else if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) {
@@ -198,20 +181,19 @@ export default function App() {
         console.error('Ошибка загрузки погоды:', err);
         setLoading(false);
       });
-  }, [activeCityIndex, cities, isPwaBlocked]);
+  }, [cityCoords, isPwaBlocked]);
 
-  // Плавное скрытие сплеш-скрина после завершения загрузки данных
+  // Плавное скрытие сплеш-скрина
   useEffect(() => {
     if (isPwaBlocked) return;
-
-    if (!loading && weatherInfo) {
+    if (!loading && weatherInfo && showSplash) {
       setIsFadingOut(true); 
       const timer = setTimeout(() => setShowSplash(false), 600);
       return () => clearTimeout(timer);
     }
-  }, [loading, weatherInfo, isPwaBlocked]);
+  }, [loading, weatherInfo, isPwaBlocked, showSplash]);
 
-  // Интерактивный поиск городов по мере ввода названия
+  // Поиск города
   const handleCitySearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -236,21 +218,23 @@ export default function App() {
       });
   };
 
+  // Сохранение и переключение на новый город
   const handleSelectCity = (cityData) => {
     const lat = parseFloat(cityData.lat);
     const lon = parseFloat(cityData.lon);
     const shortName = cityData.display_name.split(',')[0];
-    
-    setCities(prev => {
-      // Проверяем, есть ли город уже в сохраненных
-      const existsIndex = prev.findIndex(c => Math.abs(c.lat - lat) < 0.001 && Math.abs(c.lon - lon) < 0.001);
-      if (existsIndex !== -1) {
-        setActiveCityIndex(existsIndex);
+    const newCity = { name: shortName, coords: { lat, lon } };
+
+    setSavedCities(prev => {
+      // Ищем, нет ли уже этого города в пуле
+      const existingIdx = prev.findIndex(c => Math.abs(c.coords.lat - lat) < 0.02 && Math.abs(c.coords.lon - lon) < 0.02);
+      if (existingIdx !== -1) {
+        setActiveCityIndex(existingIdx);
         return prev;
       }
-      const newCities = [...prev, { name: shortName, lat, lon }];
-      setActiveCityIndex(newCities.length - 1);
-      return newCities;
+      const updated = [...prev, newCity];
+      setActiveCityIndex(updated.length - 1);
+      return updated;
     });
 
     setIsLocationOpen(false);
@@ -258,9 +242,8 @@ export default function App() {
     setSearchResults([]);
   };
 
-  // Логика свайпов влево/вправо
+  // Обработчики свайпов влево/вправо
   const handleTouchStart = (e) => {
-    setTouchEndX(null);
     setTouchStartX(e.targetTouches[0].clientX);
   };
 
@@ -270,22 +253,29 @@ export default function App() {
 
   const handleTouchEnd = () => {
     if (!touchStartX || !touchEndX) return;
-    const distance = touchStartX - touchEndX;
-    const isLeftSwipe = distance > 60;
-    const isRightSwipe = distance < -60;
+    const swipeDistance = touchStartX - touchEndX;
+    const minSwipeThreshold = 50; 
 
-    if (isLeftSwipe && activeCityIndex < cities.length - 1) {
-      setLoading(true);
-      setActiveCityIndex(prev => prev + 1);
-    } else if (isRightSwipe && activeCityIndex > 0) {
-      setLoading(true);
-      setActiveCityIndex(prev => prev - 1);
+    if (swipeDistance > minSwipeThreshold) {
+      // Свайп влево -> следующий город
+      if (activeCityIndex < savedCities.length - 1) {
+        setActiveCityIndex(prev => prev + 1);
+      }
+    } else if (swipeDistance < -minSwipeThreshold) {
+      // Свайп вправо -> предыдущий город
+      if (activeCityIndex > 0) {
+        setActiveCityIndex(prev => prev - 1);
+      }
     }
+    
+    // Сбрасываем координаты
+    setTouchStartX(null);
+    setTouchEndX(null);
   };
 
   if (!isMobile) return <DesktopPlug />;
 
-  // Функции-конвертеры для приведения данных к выбранным единицам измерения
+  // Конвертеры
   const getFormattedTemp = (celsiusVal) => {
     if (celsiusVal === undefined || celsiusVal === null) return { value: '0', unit: '°C' };
     if (unitTemp === 'fahrenheit') {
@@ -313,38 +303,34 @@ export default function App() {
   const displayWind = getFormattedWind(weatherInfo?.wind_speed_10m);
   const displayPress = getFormattedPress(weatherInfo?.surface_pressure);
   const currentVideoPath = videoSources[weatherType] || videoSources.cloudy;
-  const currentCityName = cities[activeCityIndex]?.name || 'Загрузка...';
 
   return (
     <PwaGate>
-      <div 
-        className="app-container"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      >
+      <div className="app-container">
         
         {showSplash && (
-          <div className={`splash-screen ${isFadingOut ? 'fade-out' : ''}`}>
-            <div className="splash-center-content">
-              {/* Точная копия пиксельного облака из вашего дизайна */}
-              <svg width="68" height="42" viewBox="0 0 17 11" fill="none" xmlns="http://www.w3.org/2000/svg" className="splash-cloud-icon">
-                <path d="M6 1h5v1h2v1h2v2h1v2h1v2h-1v1h-1v1H1V9H0V6h1V4h2V2h3V1z" fill="#f6f4e6"/>
-                <path d="M6 0h5v1h2v1h2v2h1v2h1v2h-1v1h-1v1H1V9H0V6h1V4h2V2h3V0zm0 1H3v1H1v2H0v3h1v2h1v1h13V9h1V7h1V5h-1V3h-2V2h-2V1H6z" fill="#000000"/>
-              </svg>
-              <div className="brand-logo">castly</div>
-            </div>
-
-            <div className="splash-bottom-content">
-              {/* Стилизованный пиксельный индикатор загрузки из 5 квадратов */}
-              <div className="loader-squares">
-                <span className="square-dot"></span>
-                <span className="square-dot"></span>
-                <span className="square-dot"></span>
-                <span className="square-dot"></span>
-                <span className="square-dot"></span>
+          <div className={`splash-screen light-theme ${isFadingOut ? 'fade-out' : ''}`}>
+            <div className="splash-content-box">
+              
+              <div className="splash-logo-area">
+                {/* SVG Пиксельное облако */}
+                <svg width="60" height="36" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg" className="pixel-cloud-svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M24 6H36V12H42V18H48V30H6V24H12V18H18V12H24V6ZM36 12V18H42V24H12V18H18V12H24V12H36Z" fill="black"/>
+                </svg>
+                <div className="brand-logo font-pixel">castly</div>
               </div>
-              <div className="splash-loading-text">{splashText}</div>
+              
+              <div className="splash-bottom-area">
+                <div className="loader-dots-squares">
+                  <div className={`square ${loadingStep >= 1 ? 'active' : ''}`}></div>
+                  <div className={`square ${loadingStep >= 2 ? 'active' : ''}`}></div>
+                  <div className={`square ${loadingStep >= 3 ? 'active' : ''}`}></div>
+                  <div className={`square ${loadingStep >= 4 ? 'active' : ''}`}></div>
+                  <div className={`square ${loadingStep >= 5 ? 'active' : ''}`}></div>
+                </div>
+                <div className="splash-loading-text">{splashText}</div>
+              </div>
+
             </div>
           </div>
         )}
@@ -356,26 +342,31 @@ export default function App() {
           <div className="video-overlay"></div>
         </div>
 
-        <div className={`ui-content-wrapper ${!showSplash ? 'app-entry-active' : ''}`}>
+        {/* Индикатор сохраненных страниц городов (точки сверху) */}
+        {savedCities.length > 1 && (
+          <div className="city-page-indicator">
+            {savedCities.map((_, idx) => (
+              <div key={idx} className={`page-dot ${idx === activeCityIndex ? 'active' : ''}`} />
+            ))}
+          </div>
+        )}
+
+        <div 
+          className={`ui-content-wrapper ${!showSplash ? 'app-entry-active' : ''}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <WeatherCard 
             data={weatherInfo} 
             type={weatherType} 
-            cityName={currentCityName} 
+            cityName={cityName} 
             unitTemp={unitTemp}
             onLocationClick={() => setIsLocationOpen(true)}
             onSettingsClick={() => setIsSettingsOpen(true)}
           />
           
           <div className="bottom-panels-area">
-            {/* Точки пагинации для наглядности свайпов городов на главном экране */}
-            {cities.length > 1 && (
-              <div className="carousel-dots">
-                {cities.map((_, idx) => (
-                  <span key={idx} className={`carousel-dot ${idx === activeCityIndex ? 'active' : ''}`}></span>
-                ))}
-              </div>
-            )}
-
             <ClothAdvice data={weatherInfo} adviceText={aiAdvice} type={weatherType} />
             
             <div className={`glass-panel details-panel data-theme-${weatherType}`}>
@@ -421,13 +412,13 @@ export default function App() {
           </div>
         </div>
 
-        {/* Модальное окно: Выбор локации */}
+        {/* Модальное окно локации */}
         {isLocationOpen && (
           <div className="modal-overlay" onClick={() => { setIsLocationOpen(false); setSearchQuery(''); setSearchResults([]); }}>
             <div className="modal-glass-container location-panel" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
                 <img src={trainIcon} alt="" className="modal-header-icon" />
-                <span className="modal-icon-title">Сменить геолокацию</span>
+                <span className="modal-icon-title">Добавить геолокацию</span>
               </div>
               
               {isGeoDenied && (
@@ -436,7 +427,7 @@ export default function App() {
                     <img src={locationIcon} alt="" className="geo-alert-svg-icon" />
                     <h3>Разрешите сайту использовать геопозицию</h3>
                   </div>
-                  <p>Вы запретили или заблокировали доступ. Нажмите на эту плашку, чтобы повторить системный запрос геопозиции.</p>
+                  <p>Вы запретили доступ. Нажмите на эту плашку, чтобы повторить системный запрос геопозиции.</p>
                 </div>
               )}
 
@@ -465,7 +456,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Модальное окно: Настройки единиц измерения */}
+        {/* Модальное окно настроек */}
         {isSettingsOpen && (
           <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
             <div className="modal-glass-container settings-panel settings-panel-container" onClick={(e) => e.stopPropagation()}>
