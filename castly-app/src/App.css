@@ -861,3 +861,67 @@ html, body {
   touch-action: pan-y; /* Позволяет скроллить по вертикали, но браузер отдает горизонтальные свайпы нам */
   width: 100%;
 }
+
+/* === PWA Gate (Экран установки) === */
+.pwa-gate-container {
+  position: fixed;
+  inset: 0;
+  background-color: #fcfade; /* Светло-желтый фон из сплеш-скрина */
+  z-index: 99999; /* Поверх всех остальных элементов */
+  display: flex;
+  flex-direction: column;
+  /* Отступ сверху учитывает safe-area (челку/динамический остров) */
+  padding: calc(80px + env(safe-area-inset-top)) 24px 24px 28px;
+  color: #000000;
+  overflow-y: auto;
+}
+
+.pwa-gate-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.pwa-gate-icon {
+  width: 56px;
+  height: auto;
+  margin-bottom: 40px;
+}
+
+.pwa-gate-title,
+.pwa-gate-subtitle {
+  font-family: 'Pix Cyrillic', monospace;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 12px;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+}
+
+.pwa-gate-subtitle {
+  margin-top: 32px;
+}
+
+.pwa-gate-text {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.pwa-gate-list {
+  font-family: 'Manrope', sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 500;
+  padding-left: 20px;
+  margin: 0;
+}
+
+.pwa-gate-list li {
+  margin-bottom: 6px;
+  padding-left: 4px;
+}
