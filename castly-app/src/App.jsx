@@ -3,6 +3,7 @@ import './App.css';
 import WeatherCard from './components/WeatherCard';
 import ClothAdvice from './components/ClothAdvice';
 import DesktopPlug from './components/DesktopPlug';
+import PwaGate from './components/PwaGate'; // Импортируем наш блокировщик
 import infoIcon from './assets/info.svg';
 import trainIcon from './assets/train.svg';
 import searchIcon from './assets/search.svg';
@@ -11,6 +12,11 @@ import menuIcon from './assets/menu.svg';
 import { getClothAdvice } from './utils/getClothAdvice';
 
 export default function App() {
+  // 1. Мгновенная синхронная проверка на блокировку PWA
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  const isPwaBlocked = isIos && !isStandalone;
+
   const [isMobile, setIsMobile] = useState(true);
   const [weatherInfo, setWeatherInfo] = useState(null);
   const [weatherType, setWeatherType] = useState('sunny');
@@ -27,7 +33,6 @@ export default function App() {
   // Состояния отображения модальных окон
   const [isLocationOpen, setIsLocationOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [showIosPrompt, setShowIosPrompt] = useState(false);
 
   // Поиск городов и управление доступом к геопозиции
   const [isGeoDenied, setIsGeoDenied] = useState(false); 
@@ -51,6 +56,8 @@ export default function App() {
 
   // Определение типа устройства (мобильный экран или тач-интерфейс)
   useEffect(() => {
+    if (isPwaBlocked) return; // Запрещаем хуку выполняться
+    
     const checkDevice = () => {
       const mobileWidth = window.innerWidth <= 768;
       const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
@@ -59,17 +66,7 @@ export default function App() {
     checkDevice();
     window.addEventListener('resize', checkDevice);
     return () => window.removeEventListener('resize', checkDevice);
-  }, []);
-
-  // Проверка: открыто ли приложение в Safari и нужно ли показать инструкцию по установке в iOS
-  useEffect(() => {
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-    const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
-
-    if (isIos && !isStandalone) {
-      setShowIosPrompt(true);
-    }
-  }, []);
+  }, [isPwaBlocked]);
 
   // Запрос текущих координат пользователя и определение города
   const requestGeoLocation = () => {
@@ -110,11 +107,14 @@ export default function App() {
   };
 
   useEffect(() => {
+    if (isPwaBlocked) return; // Запрещаем геолокацию в обычном браузере
     requestGeoLocation();
-  }, []);
+  }, [isPwaBlocked]);
 
   // Загрузка метеоданных из Open-Meteo API при изменении координат
   useEffect(() => {
+    if (isPwaBlocked) return; // Запрещаем сетевые запросы погоды в обычном браузере
+    
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${cityCoords.lat}&longitude=${cityCoords.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,weather_code,wind_speed_10m,surface_pressure,precipitation,visibility`;
 
     fetch(url)
@@ -127,7 +127,6 @@ export default function App() {
         const isDay = current.is_day;
         const currentHour = new Date().getHours();
         
-        // Определение вечернего времени для активации заката (с 18:00 до 21:00)
         const isSunsetHour = currentHour >= 18 && currentHour <= 20;
 
         if (!isDay) setWeatherType('night');
@@ -151,16 +150,18 @@ export default function App() {
         console.error('Ошибка загрузки погоды:', err);
         setLoading(false);
       });
-  }, [cityCoords]);
+  }, [cityCoords, isPwaBlocked]);
 
   // Плавное скрытие сплеш-скрина после завершения загрузки данных
   useEffect(() => {
+    if (isPwaBlocked) return;
+    
     if (!loading && weatherInfo) {
       setIsFadingOut(true); 
       const timer = setTimeout(() => setShowSplash(false), 600);
       return () => clearTimeout(timer);
     }
-  }, [loading, weatherInfo]);
+  }, [loading, weatherInfo, isPwaBlocked]);
 
   // Интерактивный поиск городов по мере ввода названия
   const handleCitySearch = (e) => {
@@ -198,212 +199,126 @@ export default function App() {
     setSearchResults([]);
   };
 
-  if (!isMobile) return <DesktopPlug />;
-
-  // Функции-конвертеры для приведения данных к выбранным единицам измерения
-  const getFormattedTemp = (celsiusVal) => {
-    if (celsiusVal === undefined || celsiusVal === null) return { value: '0', unit: '°C' };
-    if (unitTemp === 'fahrenheit') {
-      const fahrenheit = Math.round(celsiusVal * 1.8 + 32);
-      return { value: fahrenheit > 0 ? `+${fahrenheit}` : fahrenheit, unit: '°F' };
-    }
-    const celsius = Math.round(celsiusVal);
-    return { value: celsius > 0 ? `+${celsius}` : celsius, unit: '°C' };
-  };
-
-  const getFormattedWind = (kmhVal) => {
-    if (kmhVal === undefined || kmhVal === null) return { value: '0', unit: 'м/с' };
-    if (unitWind === 'ms') return { value: Math.round(kmhVal / 3.6), unit: 'м/с' };
-    if (unitWind === 'mph') return { value: Math.round(kmhVal / 1.60934), unit: 'мфч' };
-    return { value: Math.round(kmhVal), unit: 'км/ч' };
-  };
-
-  const getFormattedPress = (hpaVal) => {
-    if (hpaVal === undefined || hpaVal === null) return { value: '0', unit: 'гПа' };
-    if (unitPress === 'mmhg') return { value: Math.round(hpaVal * 0.750062), unit: 'мм рт.' };
-    return { value: Math.round(hpaVal), unit: 'гПа' };
-  };
-
-  const displayApparentTemp = getFormattedTemp(weatherInfo?.apparent_temperature);
-  const displayWind = getFormattedWind(weatherInfo?.wind_speed_10m);
-  const displayPress = getFormattedPress(weatherInfo?.surface_pressure);
-  const currentVideoPath = videoSources[weatherType] || videoSources.cloudy;
-
+  // Оборачиваем весь рендер в PwaGate. Если заблокировано — покажется только экран установки
   return (
-    <div className="app-container">
-      
-      {showSplash && (
-        <div className={`splash-screen ${isFadingOut ? 'fade-out' : ''}`}>
-          <div className="brand-logo">cast.ly</div>
-          <div className="loader-dots">....</div>
-        </div>
-      )}
-
-      <div className="video-background-container">
-        <video key={weatherType} autoPlay loop muted playsInline className="bg-video">
-          <source src={currentVideoPath} type="video/mp4" />
-        </video> 
-        <div className="video-overlay"></div>
-      </div>
-
-      <div className="ui-content-wrapper">
-        <WeatherCard 
-          data={weatherInfo} 
-          type={weatherType} 
-          cityName={cityName} 
-          unitTemp={unitTemp}
-          onLocationClick={() => setIsLocationOpen(true)}
-          onSettingsClick={() => setIsSettingsOpen(true)}
-        />
-        
-        <div className="bottom-panels-area">
-          <ClothAdvice data={weatherInfo} adviceText={aiAdvice} type={weatherType} />
-          
-          <div className={`glass-panel details-panel data-theme-${weatherType}`}>
-            <div className="panel-title">
-              <img src={infoIcon} alt="Информация" className="panel-svg-icon" />
-              <span>Подробная сводка</span>
+    <PwaGate>
+      {!isMobile ? (
+        <DesktopPlug />
+      ) : (
+        <div className="app-container">
+          {showSplash && (
+            <div className={`splash-screen ${isFadingOut ? 'fade-out' : ''}`}>
+              <div className="brand-logo">cast.ly</div>
+              <div className="loader-dots">....</div>
             </div>
-            
-            <div className="details-grid">
-              <div className="grid-item">
-                <span className="grid-label">Ощущается как</span>
-                <span className="grid-value">
-                  {displayApparentTemp.value}
-                  <span className="unit">{displayApparentTemp.unit === '°C' ? '°' : '°F'}</span>
-                </span>
-              </div>
-              <div className="grid-item">
-                <span className="grid-label">Ветер</span>
-                <span className="grid-value">
-                  {displayWind.value} <span className="unit">{displayWind.unit}</span>
-                </span>
-              </div>
-              <div className="grid-item">
-                <span className="grid-label">Влажность</span>
-                <span className="grid-value">{weatherInfo?.relative_humidity_2m || 0}<span className="unit">%</span></span>
-              </div>
-              <div className="grid-item">
-                <span className="grid-label">Давление</span>
-                <span className="grid-value">
-                  {displayPress.value} <span className="unit">{displayPress.unit}</span>
-                </span>
-              </div>
-              <div className="grid-item">
-                <span className="grid-label">Осадки</span>
-                <span className="grid-value">{weatherInfo?.precipitation > 0 ? 100 : 10}<span className="unit">%</span></span>
-              </div>
-              <div className="grid-item">
-                <span className="grid-label">Видимость</span>
-                <span className="grid-value">{weatherInfo?.visibility ? Math.round(weatherInfo.visibility/1000) : 12} <span className="unit">км</span></span>
-              </div>
-            </div>
+          )}
+
+          <div className="video-background-container">
+            <video key={weatherType} autoPlay loop muted playsInline className="bg-video">
+              <source src={currentVideoPath} type="video/mp4" />
+            </video> 
+            <div className="video-overlay"></div>
           </div>
-        </div>
-      </div>
 
-      {/* Модальное окно: Выбор локации */}
-      {isLocationOpen && (
-        <div className="modal-overlay" onClick={() => { setIsLocationOpen(false); setSearchQuery(''); setSearchResults([]); }}>
-          <div className="modal-glass-container location-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <img src={trainIcon} alt="" className="modal-header-icon" />
-              <span className="modal-icon-title">Сменить геолокацию</span>
-            </div>
+          <div className="ui-content-wrapper">
+            <WeatherCard 
+              data={weatherInfo} 
+              type={weatherType} 
+              cityName={cityName} 
+              unitTemp={unitTemp}
+              onLocationClick={() => setIsLocationOpen(true)}
+              onSettingsClick={() => setIsSettingsOpen(true)}
+            />
             
-            {isGeoDenied && (
-              <div className="geo-alert-box denied" onClick={requestGeoLocation} style={{ cursor: 'pointer' }}>
-                <div className="geo-alert-header">
-                  <img src={locationIcon} alt="" className="geo-alert-svg-icon" />
-                  <h3>Разрешите сайту использовать геопозицию</h3>
+            <div className="bottom-panels-area">
+              <ClothAdvice data={weatherInfo} adviceText={aiAdvice} type={weatherType} />
+              
+              <div className={`glass-panel details-panel data-theme-${weatherType}`}>
+                <div className="panel-title">
+                  <img src={infoIcon} alt="Информация" className="panel-svg-icon" />
+                  <span>Подробная сводка</span>
                 </div>
-                <p>Вы запретили или заблокировали доступ. Нажмите на эту плашку, чтобы повторить системный запрос геопозиции.</p>
+                
+                <div className="details-grid">
+                  <div className="grid-item"><span className="grid-label">Ощущается как</span><span className="grid-value">{displayApparentTemp.value}<span className="unit">{displayApparentTemp.unit === '°C' ? '°' : '°F'}</span></span></div>
+                  <div className="grid-item"><span className="grid-label">Ветер</span><span className="grid-value">{displayWind.value} <span className="unit">{displayWind.unit}</span></span></div>
+                  <div className="grid-item"><span className="grid-label">Влажность</span><span className="grid-value">{weatherInfo?.relative_humidity_2m || 0}<span className="unit">%</span></span></div>
+                  <div className="grid-item"><span className="grid-label">Давление</span><span className="grid-value">{displayPress.value} <span className="unit">{displayPress.unit}</span></span></div>
+                  <div className="grid-item"><span className="grid-label">Осадки</span><span className="grid-value">{weatherInfo?.precipitation > 0 ? 100 : 10}<span className="unit">%</span></span></div>
+                  <div className="grid-item"><span className="grid-label">Видимость</span><span className="grid-value">{weatherInfo?.visibility ? Math.round(weatherInfo.visibility/1000) : 12} <span className="unit">км</span></span></div>
+                </div>
               </div>
-            )}
-
-            <div className="search-input-wrapper">
-              <img src={searchIcon} alt="" className="search-input-svg-icon" />
-              <input 
-                type="text" 
-                placeholder="начните поиск (от 3-х букв)" 
-                className="modal-search-input" 
-                value={searchQuery}
-                onChange={handleCitySearch}
-              />
             </div>
+          </div>
 
-            {searchResults.length > 0 && (
-              <div className="search-results-container">
-                {searchResults.map((city, index) => (
-                  <div key={index} className="search-result-item" onClick={() => handleSelectCity(city)}>
-                    {city.display_name}
+          {/* Модальное окно: Выбор локации */}
+          {isLocationOpen && (
+            <div className="modal-overlay" onClick={() => { setIsLocationOpen(false); setSearchQuery(''); setSearchResults([]); }}>
+              <div className="modal-glass-container location-panel" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <img src={trainIcon} alt="" className="modal-header-icon" />
+                  <span className="modal-icon-title">Сменить геолокацию</span>
+                </div>
+                {isGeoDenied && (
+                  <div className="geo-alert-box denied" onClick={requestGeoLocation} style={{ cursor: 'pointer' }}>
+                    <div className="geo-alert-header">
+                      <img src={locationIcon} alt="" className="geo-alert-svg-icon" />
+                      <h3>Разрешите сайту использовать геопозицию</h3>
+                    </div>
+                    <p>Вы запретили доступ. Нажмите сюда, чтобы повторить запрос.</p>
                   </div>
-                ))}
+                )}
+                <div className="search-input-wrapper">
+                  <img src={searchIcon} alt="" className="search-input-svg-icon" />
+                  <input type="text" placeholder="начните поиск (от 3-х букв)" className="modal-search-input" value={searchQuery} onChange={handleCitySearch} />
+                </div>
+                {searchResults.length > 0 && (
+                  <div className="search-results-container">
+                    {searchResults.map((city, index) => (
+                      <div key={index} className="search-result-item" onClick={() => handleSelectCity(city)}>{city.display_name}</div>
+                    ))}
+                  </div>
+                )}
+                {isSearching && <div className="search-status-text">Ищем подходящие города...</div>}
               </div>
-            )}
-            {isSearching && <div className="search-status-text">Ищем подходящие города...</div>}
-          </div>
+            </div>
+          )}
+
+          {/* Модальное окно: Настройки */}
+          {isSettingsOpen && (
+            <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
+              <div className="modal-glass-container settings-panel settings-panel-container" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <img src={menuIcon} alt="" className="modal-header-icon" />
+                  <span className="modal-icon-title title-pix">Настройки</span>
+                </div>
+                <div className="settings-row">
+                  <label>Температура</label>
+                  <div className="toggle-group">
+                    <button className={`toggle-btn ${unitTemp === 'celsius' ? 'active' : ''}`} onClick={() => setUnitTemp('celsius')}>Цельсиум (°C)</button>
+                    <button className={`toggle-btn ${unitTemp === 'fahrenheit' ? 'active' : ''}`} onClick={() => setUnitTemp('fahrenheit')}>Фаренгейт (°F)</button>
+                  </div>
+                </div>
+                <div className="settings-row">
+                  <label>Ветер</label>
+                  <div className="toggle-group">
+                    <button className={`toggle-btn ${unitWind === 'ms' ? 'active' : ''}`} onClick={() => setUnitWind('ms')}>м/с</button>
+                    <button className={`toggle-btn ${unitWind === 'kmh' ? 'active' : ''}`} onClick={() => setUnitWind('kmh')}>км/ч</button>
+                    <button className={`toggle-btn ${unitWind === 'mph' ? 'active' : ''}`} onClick={() => setUnitWind('mph')}>мфч</button>
+                  </div>
+                </div>
+                <div className="settings-row">
+                  <label>Давление</label>
+                  <div className="toggle-group">
+                    <button className={`toggle-btn ${unitPress === 'gpa' ? 'active' : ''}`} onClick={() => setUnitPress('gpa')}>Гектопаскали (гПа)</button>
+                    <button className={`toggle-btn ${unitPress === 'mmhg' ? 'active' : ''}`} onClick={() => setUnitPress('mmhg')}>мм рт. ст.</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
-
-      {/* Модальное окно: Настройки единиц измерения */}
-      {isSettingsOpen && (
-        <div className="modal-overlay" onClick={() => setIsSettingsOpen(false)}>
-          <div className="modal-glass-container settings-panel settings-panel-container" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <img src={menuIcon} alt="" className="modal-header-icon" />
-              <span className="modal-icon-title title-pix">Настройки</span>
-            </div>
-
-            <div className="settings-row">
-              <label>Температура</label>
-              <div className="toggle-group">
-                <button className={`toggle-btn ${unitTemp === 'celsius' ? 'active' : ''}`} onClick={() => setUnitTemp('celsius')}>Цельсиум (°C)</button>
-                <button className={`toggle-btn ${unitTemp === 'fahrenheit' ? 'active' : ''}`} onClick={() => setUnitTemp('fahrenheit')}>Фаренгейт (°F)</button>
-              </div>
-            </div>
-
-            <div className="settings-row">
-              <label>Ветер</label>
-              <div className="toggle-group">
-                <button className={`toggle-btn ${unitWind === 'ms' ? 'active' : ''}`} onClick={() => setUnitWind('ms')}>м/с</button>
-                <button className={`toggle-btn ${unitWind === 'kmh' ? 'active' : ''}`} onClick={() => setUnitWind('kmh')}>км/ч</button>
-                <button className={`toggle-btn ${unitWind === 'mph' ? 'active' : ''}`} onClick={() => setUnitWind('mph')}>мфч</button>
-              </div>
-            </div>
-
-            <div className="settings-row">
-              <label>Давление</label>
-              <div className="toggle-group">
-                <button className={`toggle-btn ${unitPress === 'gpa' ? 'active' : ''}`} onClick={() => setUnitPress('gpa')}>Гектопаскали (гПа)</button>
-                <button className={`toggle-btn ${unitPress === 'mmhg' ? 'active' : ''}`} onClick={() => setUnitPress('mmhg')}>мм рт. ст.</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Модальное окно: Инструкция по установке PWA для iOS */}
-      {showIosPrompt && (
-        <div className="modal-overlay" onClick={() => setShowIosPrompt(false)}>
-          <div className="modal-glass-container settings-panel" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <img src={infoIcon} alt="" className="modal-header-icon" />
-              <span className="modal-icon-title">Установка приложения</span>
-            </div>
-            <div style={{ padding: '15px 0', lineHeight: '1.5', fontSize: '14px', color: '#e0e0e0' }}>
-              <p style={{ marginBottom: '12px' }}>Установите **cast.ly** на главный экран, чтобы использовать его как полноценное веб-приложение.</p>
-              <div style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                Нажмите на кнопку **«Поделиться»** в меню Safari (квадрат со стрелкой вверх) и выберите **«На экран "Домой"»**.
-              </div>
-            </div>
-            <button className="toggle-btn active" style={{ width: '100%', padding: '12px', marginTop: '10px' }} onClick={() => setShowIosPrompt(false)}>
-              Понятно
-            </button>
-          </div>
-        </div>
-      )}
-
-    </div>
+    </PwaGate>
   );
 }
