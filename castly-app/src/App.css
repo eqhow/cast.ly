@@ -39,8 +39,8 @@ html, body {
 }
 
 .weather-status-svg {
-  width: 15px !important; /* Увеличено для лучшей размеренности */
-  height: 15px !important;
+  width: 20px !important; /* Увеличено для лучшей размеренности */
+  height: 20px !important;
   object-fit: contain;
   flex-shrink: 0;
   display: block;
