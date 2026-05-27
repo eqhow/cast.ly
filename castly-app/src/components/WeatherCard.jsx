@@ -63,7 +63,7 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
         </div>
 
         {/* Отдалили статус погоды от температуры */}
-        <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '32px' }}>
+        <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '1px' }}>
           
           {/* Уменьшили иконку и придвинули текст вплотную к ней */}
           <img 
