@@ -7,7 +7,7 @@ export function getClothAdvice(weatherData) {
   const isRain = weatherData.precipitation > 0;
   const isNight = weatherData.is_day === 0;
 
-  // Шаблон 1: Одежда по температуре воздуха
+  // Одежда по температуре воздуха
   let phrase1 = "";
   if (temp <= -10) {
     phrase1 = "Сегодня экстремально холодно: обязательно надевайте термобельё, пуховик и тёплые варежки.";
@@ -23,7 +23,7 @@ export function getClothAdvice(weatherData) {
     phrase1 = "Летняя жара: шорты и футболка — лучший выбор.";
   }
 
-  // Шаблон 2: Корректировка по осадкам, ветру и времени суток
+  // Корректировка по осадкам, ветру и времени суток
   let phrase2 = "";
   if (isRain) {
     phrase2 = "Не забудьте зонт или дождевик, а также непромокаемую обувь, чтобы ноги оставались сухими.";

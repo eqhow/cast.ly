@@ -16,7 +16,6 @@ import trashIcon from './assets/trash.svg';
 import { getClothAdvice } from './utils/getClothAdvice';
 
 export default function App() {
-  // Синхронное определение блокировки PWA
   const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
   const isPwaBlocked = isIos && !isStandalone;
@@ -95,7 +94,6 @@ export default function App() {
     night: '/videos/bg-night.mp4'
   };
 
-  // Ротация текста и кубиков на сплеш-скрине
   useEffect(() => {
     if (!showSplash) return;
     const phrases = ['изучаю местность', 'проверяю погоду', 'обновляю данные'];
@@ -116,7 +114,6 @@ export default function App() {
     };
   }, [showSplash]);
 
-  // Определение мобилки
   useEffect(() => {
     if (isPwaBlocked) return;
     const checkDevice = () => {
@@ -150,7 +147,6 @@ export default function App() {
             const address = geoData.address;
             const city = address.city || address.town || address.village || address.state || "Неизвестный город";
             
-            // Если город дефолтный (пользователь еще ничего не добавлял), заменяем его геолокацией
             setSavedCities(prev => {
               if (prev.length === 1 && prev[0].isDefault) {
                 return [{ name: city, coords: { lat: latitude, lon: longitude } }];
@@ -170,7 +166,6 @@ export default function App() {
 
   useEffect(() => {
     if (isPwaBlocked) return;
-    // Запрашиваем геолокацию при первом запуске, если город стоит дефолтный
     if (savedCities.length === 1 && savedCities[0].isDefault) {
       requestGeoLocation();
     }
@@ -215,7 +210,6 @@ export default function App() {
       });
   }, [cityCoords, isPwaBlocked]);
 
-  // Плавное скрытие сплеш-скрина
   useEffect(() => {
     if (isPwaBlocked) return;
     if (!loading && weatherInfo && showSplash) {
@@ -225,7 +219,6 @@ export default function App() {
     }
   }, [loading, weatherInfo, isPwaBlocked, showSplash]);
 
-  // Поиск города
   const handleCitySearch = (e) => {
     const value = e.target.value;
     setSearchQuery(value);
@@ -250,7 +243,6 @@ export default function App() {
       });
   };
 
-  // Добавление нового города
   const handleSelectCity = (cityData) => {
     const lat = parseFloat(cityData.lat);
     const lon = parseFloat(cityData.lon);
@@ -264,7 +256,6 @@ export default function App() {
         setActiveCityIndex(existingIdx);
         return prev;
       }
-      // Убираем флаг дефолтности, если он был, так как пользователь сам добавил город
       const updated = prev[0]?.isDefault ? [newCity] : [...prev, newCity];
       setActiveCityIndex(updated.length - 1);
       return updated;
@@ -275,7 +266,6 @@ export default function App() {
     setSearchResults([]);
   };
 
-  // Управление городами (перемещение, удаление)
   const moveCityUp = (index) => {
     if (index === 0) return;
     setSavedCities(prev => {
@@ -309,7 +299,6 @@ export default function App() {
     }
   };
 
-  // Обработчики свайпов влево/вправо
   const handleTouchStart = (e) => setTouchStartX(e.targetTouches[0].clientX);
   const handleTouchMove = (e) => setTouchEndX(e.targetTouches[0].clientX);
   const handleTouchEnd = () => {
@@ -499,7 +488,6 @@ export default function App() {
               )}
               {isSearching && <div className="search-status-text">Ищем подходящие города...</div>}
 
-              {/* Менеджер сохраненных локаций (показывается, когда нет поиска) */}
               {searchResults.length === 0 && savedCities.length > 0 && (
                 <div className="saved-cities-manager">
                   <div className="modal-header" style={{ marginBottom: '15px' }}>

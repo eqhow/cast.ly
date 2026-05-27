@@ -4,7 +4,6 @@ const PwaGate = ({ children }) => {
   const [showBlocker, setShowBlocker] = useState(false);
 
   useEffect(() => {
-    // Проверка устройства iOS и режима запуска (Standalone / Экран «Домой»)
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
     const isInstalled = window.navigator.standalone === true 
                       || window.matchMedia('(display-mode: standalone)').matches;
@@ -14,7 +13,6 @@ const PwaGate = ({ children }) => {
     }
   }, []);
 
-  // Интерфейс блокировщика для Safari на iOS
   if (showBlocker) {
     return (
       <div className="pwa-gate-container">

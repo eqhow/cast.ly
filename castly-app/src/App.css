@@ -1,5 +1,4 @@
-/* === Базовые настройки и сброс стилей === */
-
+/* Базовые стили */
 * {
   margin: 0;
   padding: 0;
@@ -22,7 +21,7 @@ html, body {
   height: 100lvh; 
 }
 
-/* Системные иконки общего назначения */
+/* Общие иконки */
 .header-svg-icon {
   width: 20px;
   height: 20px;
@@ -39,7 +38,7 @@ html, body {
 }
 
 .weather-status-svg {
-  width: 20px !important; /* Увеличено для лучшей размеренности */
+  width: 20px !important;
   height: 20px !important;
   object-fit: contain;
   flex-shrink: 0;
@@ -56,8 +55,7 @@ html, body {
   vertical-align: middle;
 }
 
-/* === Десктопная заглушка === */
-
+/* Заглушка для ПК */
 .desktop-plug-wrapper {
   display: flex;
   align-items: center;
@@ -99,8 +97,7 @@ html, body {
   letter-spacing: -0.2px;
 }
 
-/* === Сплеш-скрин и лоадер === */
-
+/* Сплеш-скрин */
 .splash-screen {
   position: fixed;
   top: 0;
@@ -135,7 +132,7 @@ html, body {
   50% { opacity: 1; }
 }
 
-/* --- Стилизация сплеш-скрина под светлый макет --- */
+/* Светлая тема сплеша */
 .splash-screen.light-theme {
   background-color: #fcfade; 
   display: flex;
@@ -167,7 +164,7 @@ html, body {
 }
 
 .splash-icon {
-  width: 72px; /* Размер иконки облака из favicon */
+  width: 72px;
   height: auto;
   margin-bottom: 12px;
 }
@@ -212,8 +209,7 @@ html, body {
   font-weight: 400;
 }
 
-/* === Динамический видео-фон === */
-
+/* Фон приложения */
 .app-container {
   position: fixed; 
   top: 0;
@@ -264,8 +260,7 @@ html, body {
   z-index: 1;
 }
 
-/* === Структура мобильного UI === */
-
+/* Основной UI */
 .ui-content-wrapper {
   position: relative;
   z-index: 2;
@@ -281,7 +276,7 @@ html, body {
   touch-action: pan-y;
 }
 
-/* Красивые анимации загрузки */
+/* Анимации при старте */
 .app-entry-active .weather-card-top {
   animation: fadeDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -364,7 +359,7 @@ html, body {
 
 .temp-large-pix {
   font-family: 'Pix Cyrillic', monospace;
-  font-size: 72px; /* 3.2rem */
+  font-size: 72px;
   line-height: 1;
   margin-bottom: 8px;
   color: #ffffff;
@@ -373,7 +368,7 @@ html, body {
 
 .condition-pix {
   font-family: 'Pix Cyrillic', monospace;
-  font-size: 22px; /* Выровнено относительно иконки */
+  font-size: 22px;
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -381,8 +376,7 @@ html, body {
   transition: color 0.4s ease; 
 }
 
-/* === Нижние информационные панели и стекломорфизм === */
-
+/* Нижние панели (стекло) */
 .bottom-panels-area {
   display: flex;
   flex-direction: column;
@@ -431,8 +425,7 @@ html, body {
   color: rgba(255, 255, 255, 0.9) !important; 
 }
 
-/* === Сетка подробной сводки погоды === */
-
+/* Сетка деталей погоды */
 .details-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -474,8 +467,7 @@ html, body {
   margin-left: 2px;
 }
 
-/* === Индикаторы страниц на главном экране при свайпах (внизу, квадраты) === */
-
+/* Индикаторы страниц */
 .city-page-indicator {
   display: flex;
   justify-content: center;
@@ -488,8 +480,8 @@ html, body {
 .page-square {
   width: 6px;
   height: 6px;
-  border-radius: 2px; /* Квадраты с легким скруглением */
-  background-color: currentColor; /* Наследует цвет от темы */
+  border-radius: 2px;
+  background-color: currentColor;
   opacity: 0.3;
   transition: all 0.3s ease;
 }
@@ -499,9 +491,8 @@ html, body {
   transform: scale(1.2);
 }
 
-/* === Стилизация цветовых тем для шапки === */
-
-/* Светлые темы оформления: дождь, ночь, ясно (днем/солнечно), закат -> БЕЛЫЕ ИКОНКИ И ТЕКСТ */
+/* Темы (зависят от погоды) */
+/* Белый текст для темных фонов */
 .data-theme-sunny,
 .data-theme-sunset,
 .data-theme-rainy,
@@ -535,7 +526,7 @@ html, body {
   filter: brightness(0) invert(1) !important;
 }
 
-/* Темные темы оформления: облачно -> ЧЕРНЫЕ ИКОНКИ И ТЕКСТ */
+/* Черный текст для светлых фонов */
 .data-theme-cloudy {
   color: #000000 !important;
 }
@@ -551,8 +542,7 @@ html, body {
   filter: brightness(0) !important;
 }
 
-/* === Модальные окна === */
-
+/* Модалки */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -611,7 +601,7 @@ html, body {
   color: #ffffff;
 }
 
-/* Модальное окно: Выбор локации */
+/* Модалка: Выбор локации */
 .geo-alert-box {
   background: rgba(255, 107, 107, 0.16); 
   border: 1px solid rgba(255, 107, 107, 0.25);
@@ -735,7 +725,7 @@ html, body {
   text-align: center;
 }
 
-/* Менеджер сохраненных городов */
+/* Сохраненные города */
 .saved-cities-manager {
   margin-top: 24px;
   border-top: 1px solid rgba(255,255,255,0.1);
@@ -803,7 +793,7 @@ html, body {
   background: rgba(255,107,107,0.1);
 }
 
-/* Модальное окно: Панель настроек */
+/* Модалка: Настройки */
 .settings-row {
   margin-bottom: 22px;
 }
@@ -873,7 +863,7 @@ html, body {
   font-weight: 700 !important; 
 }
 
-/* === PWA Gate (Экран установки) === */
+/* Экран установки PWA */
 .pwa-gate-container {
   position: fixed;
   inset: 0;

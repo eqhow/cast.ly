@@ -10,7 +10,6 @@ import nightIcon from '../assets/night.svg';
 export default function WeatherCard({ data, cityName, type, onLocationClick, onSettingsClick, unitTemp }) {
   if (!data) return null;
 
-  // Конвертация температуры в зависимости от выбранных единиц измерения
   const celsiusVal = data.temperature_2m;
   const isFahrenheit = unitTemp === 'fahrenheit';
   
@@ -18,7 +17,6 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
   const tempLabel = convertedTemp > 0 ? `+${convertedTemp}` : convertedTemp;
   const unitLabel = isFahrenheit ? '°F' : '°C';
 
-  // Определение иконки и локализованного статуса погоды
   const getWeatherDetails = () => {
     switch (type) {
       case 'sunny':
@@ -55,17 +53,14 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
         />
       </div>
 
-      {/* Сдвинули весь блок с температурой ниже от локации */}
       <div className="main-display" style={{ marginTop: '42px' }}>
         
         <div className="temp-large-pix" style={{ fontSize: '3rem', lineHeight: '1' }}>
           {tempLabel}{unitLabel}
         </div>
 
-        {/* Отдалили статус погоды от температуры */}
         <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '1px' }}>
-          
-          {/* Уменьшили иконку и придвинули текст вплотную к ней */}
+
           <img 
             src={weather.icon} 
             alt={weather.text} 

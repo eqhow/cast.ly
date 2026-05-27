@@ -4,7 +4,6 @@ export default function DesktopPlug() {
   return (
     <div className="desktop-plug-wrapper">
       <div className="desktop-plug-content">
-        {/* Иконка логотипа приложения */}
         <img 
           src="/favicon.svg" 
           alt="castly icon" 

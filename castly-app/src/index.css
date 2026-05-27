@@ -1,4 +1,3 @@
-/* Подключение шрифта Manrope различных начертаний */
 @font-face {
   font-family: 'Manrope';
   src: url('./fonts/Manrope-Regular.ttf') format('truetype');
