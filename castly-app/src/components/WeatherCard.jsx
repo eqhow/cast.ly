@@ -55,11 +55,18 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
         />
       </div>
 
-      <div className="main-display">
-        <div className="temp-large-pix">{tempLabel}{unitLabel}</div>
-        <div className="condition-pix">
-          <img src={weather.icon} alt={weather.text} className="weather-status-svg" />
-          <span>{weather.text}</span>
+      <div className="main-display" style={{ marginTop: '24px' }}>
+        <div className="temp-large-pix" style={{ fontSize: '4.5rem', lineHeight: '1' }}>
+          {tempLabel}{unitLabel}
+        </div>
+        <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
+          <img 
+            src={weather.icon} 
+            alt={weather.text} 
+            className="weather-status-svg" 
+            style={{ width: '22px', height: '22px', marginRight: '8px' }} 
+          />
+          <span style={{ fontSize: '1.4rem', lineHeight: '1' }}>{weather.text}</span>
         </div>
       </div>
     </div>

@@ -9,6 +9,10 @@ import trainIcon from './assets/train.svg';
 import searchIcon from './assets/search.svg';
 import locationIcon from './assets/location.svg';
 import menuIcon from './assets/menu.svg';
+import heartIcon from './assets/heart.svg';
+import upIcon from './assets/up.svg';
+import downIcon from './assets/down.svg';
+import trashIcon from './assets/trash.svg';
 import { getClothAdvice } from './utils/getClothAdvice';
 
 export default function App() {
@@ -431,11 +435,10 @@ export default function App() {
               </div>
             </div>
 
-            {/* Индикаторы свайпов перенесены вниз */}
             {savedCities.length > 1 && (
               <div className={`city-page-indicator data-theme-${weatherType}`}>
                 {savedCities.map((_, idx) => (
-                  <div key={idx} className={`page-square ${idx === activeCityIndex ? 'active' : ''}`} />
+                  <div key={idx} className={`page-square ${idx === activeCityIndex ? 'active' : ''}`} style={{ borderRadius: '0px' }} />
                 ))}
               </div>
             )}
@@ -486,16 +489,25 @@ export default function App() {
               {/* Менеджер сохраненных локаций (показывается, когда нет поиска) */}
               {searchResults.length === 0 && savedCities.length > 0 && (
                 <div className="saved-cities-manager">
-                  <h4 className="saved-cities-title">Сохраненные локации</h4>
+                  <div className="modal-header" style={{ marginBottom: '15px' }}>
+                    <img src={heartIcon} alt="" className="modal-header-icon" />
+                    <span className="modal-icon-title">Сохраненные локации</span>
+                  </div>
                   {savedCities.map((city, idx) => (
                     <div key={idx} className={`saved-city-row ${idx === activeCityIndex ? 'active-city-row' : ''}`}>
                       <span onClick={() => { setActiveCityIndex(idx); setIsLocationOpen(false); }}>
                         {city.name} {idx === activeCityIndex && '(Текущая)'}
                       </span>
-                      <div className="city-actions">
-                        <button onClick={(e) => { e.stopPropagation(); moveCityUp(idx); }}>↑</button>
-                        <button onClick={(e) => { e.stopPropagation(); moveCityDown(idx); }}>↓</button>
-                        <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteCity(idx); }}>✕</button>
+                      <div className="city-actions" style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={(e) => { e.stopPropagation(); moveCityUp(idx); }} style={{ background: 'transparent', border: 'none', padding: '0', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <img src={upIcon} alt="Вверх" style={{ width: '20px', height: '20px' }} />
+                        </button>
+                        <button onClick={(e) => { e.stopPropagation(); moveCityDown(idx); }} style={{ background: 'transparent', border: 'none', padding: '0', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <img src={downIcon} alt="Вниз" style={{ width: '20px', height: '20px' }} />
+                        </button>
+                        <button className="delete-btn" onClick={(e) => { e.stopPropagation(); deleteCity(idx); }} style={{ background: 'transparent', border: 'none', padding: '0', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                          <img src={trashIcon} alt="Удалить" style={{ width: '20px', height: '20px' }} />
+                        </button>
                       </div>
                     </div>
                   ))}
