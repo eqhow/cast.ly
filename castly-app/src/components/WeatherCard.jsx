@@ -56,17 +56,20 @@ export default function WeatherCard({ data, cityName, type, onLocationClick, onS
       </div>
 
       <div className="main-display" style={{ marginTop: '24px' }}>
-        <div className="temp-large-pix" style={{ fontSize: '4.5rem', lineHeight: '1' }}>
+        {/* Увеличен размер шрифта для температуры */}
+        <div className="temp-large-pix" style={{ fontSize: '6.5rem', lineHeight: '1' }}>
           {tempLabel}{unitLabel}
         </div>
-        <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '12px' }}>
+        <div className="condition-pix" style={{ display: 'flex', alignItems: 'center', marginTop: '16px' }}>
+          {/* Увеличен размер иконки погоды и отступ справа */}
           <img 
             src={weather.icon} 
             alt={weather.text} 
             className="weather-status-svg" 
-            style={{ width: '22px', height: '22px', marginRight: '8px' }} 
+            style={{ width: '36px', height: '36px', marginRight: '12px' }} 
           />
-          <span style={{ fontSize: '1.4rem', lineHeight: '1' }}>{weather.text}</span>
+          {/* Увеличен размер шрифта для статуса (Облачно, Ясно и тд) */}
+          <span style={{ fontSize: '2.2rem', lineHeight: '1' }}>{weather.text}</span>
         </div>
       </div>
     </div>

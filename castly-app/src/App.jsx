@@ -65,10 +65,23 @@ export default function App() {
   const [searchResults, setSearchResults] = useState([]); 
   const [isSearching, setIsSearching] = useState(false);   
 
-  // Настройки
-  const [unitTemp, setUnitTemp] = useState('celsius'); 
-  const [unitWind, setUnitWind] = useState('ms');      
-  const [unitPress, setUnitPress] = useState('gpa');    
+  // Настройки (теперь сохраняются и загружаются из localStorage)
+  const [unitTemp, setUnitTemp] = useState(() => localStorage.getItem('castly_unitTemp') || 'celsius'); 
+  const [unitWind, setUnitWind] = useState(() => localStorage.getItem('castly_unitWind') || 'ms');      
+  const [unitPress, setUnitPress] = useState(() => localStorage.getItem('castly_unitPress') || 'gpa');    
+
+  // Эффекты для сохранения настроек при их изменении
+  useEffect(() => {
+    localStorage.setItem('castly_unitTemp', unitTemp);
+  }, [unitTemp]);
+
+  useEffect(() => {
+    localStorage.setItem('castly_unitWind', unitWind);
+  }, [unitWind]);
+
+  useEffect(() => {
+    localStorage.setItem('castly_unitPress', unitPress);
+  }, [unitPress]);
 
   // Переменные для отслеживания свайпов
   const [touchStartX, setTouchStartX] = useState(null);
